@@ -11,7 +11,14 @@ import {
   Legend,
   type ChartOptions,
 } from 'chart.js';
-import { buildArray,runOneFrame, runStats,runMultipleTests} from "./simulation/sim";
+import { 
+  buildArray,
+  runOneFrame,
+  runStats,
+  runMultipleTests,
+  setConfigVars,
+  getConfigVars
+} from "./simulation/sim";
 import { useEffect, useState } from "react";
 ChartJS.register(
   CategoryScale,
@@ -22,19 +29,39 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-const sleep = (ms:number) => new Promise((resolve) => setTimeout(resolve, ms));
 export default function Home(){
   const [ret, setRet] = useState<{dataset: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[], iterations: string[]} | null>(null);
-  const [run,setRun] = useState(0)
+  const [run,setRun] = useState(0);
+  const [manual,setManual] = useState (false);
+  const [tests, setTests] = useState(7);
+  const [iterations,setIterations] = useState(12);
+  const configs = getConfigVars();
   useEffect(() => {
-    const result = runMultipleTests(10,200);
+    const result = runMultipleTests(tests,iterations);
     setRet(result);
   }, [run]);
   if (!ret) return (<div>Running tests...</div>);
   return (<div>
-    <Main auto={true} info={ret}></Main>
-    <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={()=>{setRun(run+1)}}>
+    <Main auto={!manual} info={ret}></Main>
+    <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={()=>{setRun(run +1 %2)}}>
       <h1>Re-Run</h1>
+    </div>
+    <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={()=>{setManual(!manual)}}>
+      <h1>Mode: {manual ? "manual": "autotest"}</h1>
+    </div>
+    <div>
+      <h5>Immunity</h5>
+      <input placeholder= {"" + configs[0]} onChange={(e)=>{setConfigVars(parseFloat(e.target.value),configs[1],configs[2],configs[3])}}></input>
+      <h5>Immunity Chance</h5>
+      <input placeholder= {"" + configs[1]} onChange={(e)=>{setConfigVars(configs[0],parseFloat(e.target.value),configs[2],configs[3])}}></input>
+      <h5>Cure Chance</h5>
+      <input placeholder= {"" + configs[2]} onChange={(e)=>{setConfigVars(configs[0],configs[1],parseFloat(e.target.value),configs[3])}}></input>
+      <h5>Infection Chance</h5>
+      <input placeholder= {"" + configs[3]} onChange={(e)=>{setConfigVars(configs[0],configs[1],configs[2],parseFloat(e.target.value),)}}></input>
+      <h5>Number of Tests</h5>
+      <input placeholder= {"" + tests} onChange={(e)=>{setTests(parseInt(e.target.value))}}></input>
+      <h5>Iterations</h5>
+      <input placeholder= {"" + iterations} onChange={(e)=>{setIterations(parseInt(e.target.value))}}></input>
     </div>
   </div>);
 }

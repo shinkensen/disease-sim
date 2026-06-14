@@ -1,5 +1,3 @@
-
-
 type person = {
     infected: boolean,
     immune:number
@@ -10,19 +8,15 @@ type r4 ={
     r3:boolean,
     r4:boolean
 }
-type r3 ={
-    r1: boolean,
-    r2:boolean,
-    r3:boolean,
+let immunity =1;
+let immunityChance = 0.85;
+let curePercent = 0.95;
+let infectionPercent = 0.7;
+
+export const  setConfigVars = (im:number,imChance:number,cure:number, infPer:number)=>{
+    immunity = im; immunityChance =imChance; curePercent =cure; infectionPercent = infPer;
 }
-type r2 ={
-    r1: boolean,
-    r2:boolean,
-}
-const immunity =1;
-const immunityChance = 0.85;
-const curePercent = 0.9;
-const infectionPercent = 0.7;
+export const getConfigVars = ()=> [immunity,immunityChance,curePercent,infectionPercent]
 export function buildArray(infectedCoords:{x:number,y:number},rows:number,cols:number){
     const ret= [];
     for (let i=0;i<rows;i++){
