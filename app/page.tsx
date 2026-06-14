@@ -1,65 +1,117 @@
-import Image from "next/image";
-
-export default function Home() {
+"use client";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  type ChartOptions,
+} from 'chart.js';
+import { buildArray,runOneFrame, runStats,runMultipleTests} from "./simulation/sim";
+import { useEffect, useState } from "react";
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+const sleep = (ms:number) => new Promise((resolve) => setTimeout(resolve, ms));
+export default function Home(){
+  const [ret, setRet] = useState<{dataset: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[], iterations: string[]} | null>(null);
+  const [run,setRun] = useState(0)
+  useEffect(() => {
+    const result = runMultipleTests(1,200000);
+    setRet(result);
+  }, [run]);
+  if (!ret) return (<div>Running tests...</div>);
+  return (<div>
+    <Main auto={true} info={ret}></Main>
+    <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={()=>{setRun(run+1)}}>
+      <h1>Re-Run</h1>
+    </div>
+  </div>);
+}
+export function Main({auto, info}:{auto:boolean, info:{dataset: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[],iterations:string[]}}) {
+  const [array,setArray] = useState(buildArray({x:0,y:0},11,13));
+  let [iteration,setIteration] = useState(["0"]);
+  const [data,setData] = useState([1]);
+  const run = ()=>{
+      let temp = runOneFrame(array);
+      setArray(temp);
+      let temp2 = data;
+      temp2.push(runStats(temp).infected);
+      setData(temp2);
+      iteration.push("" +(parseInt(iteration[iteration.length-1]) +1));
+      setIteration(iteration);
+    }
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div>
+    <div style={{ display: "grid", gap: 8, padding: 16 }}>
+      {array.map((row, rowIndex) => (
+        <div key={rowIndex} style={{ display: "flex", gap: 8 }}>
+          {row.map((cell, cellIndex) => (
+            <div
+              key={cellIndex}
+              aria-label={cell.infected ? "infected" : "safe"}
+              title={cell.infected ? "infected" : "safe"}
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                backgroundColor: cell.infected ? "red" : "green",
+              }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
-      </main>
+      ))}
+    </div>
+    <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={run}>
+      <h1>Next Frame</h1>
+    </div>
+    <LineChart labels={auto? info!.iterations! :iteration} data1={data} mode2={auto? info.dataset : undefined}></LineChart>
     </div>
   );
 }
+const LineChart = ({labels, data1,mode2}:{labels: string[], data1?: number[],mode2?:{ label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[]}) => {
+  const data = {
+    labels: labels,
+    datasets: mode2? mode2 :[
+      {
+        label: 'Infected',
+        data: data1,
+        borderColor: 'rgb(212, 30, 30)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0,
+      },
+    ],
+  };
+  const options: ChartOptions<"line"> = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Infected vs Time',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+  return (
+    <div style={{ width: '`00%', margin: '0 auto' }}>
+      <Line data={data} options={options} />
+    </div>
+  );
+};
