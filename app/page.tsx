@@ -27,7 +27,7 @@ export default function Home(){
   const [ret, setRet] = useState<{dataset: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[], iterations: string[]} | null>(null);
   const [run,setRun] = useState(0)
   useEffect(() => {
-    const result = runMultipleTests(1,200000);
+    const result = runMultipleTests(10,200);
     setRet(result);
   }, [run]);
   if (!ret) return (<div>Running tests...</div>);

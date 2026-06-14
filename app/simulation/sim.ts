@@ -42,7 +42,7 @@ export function buildArray(infectedCoords:{x:number,y:number},rows:number,cols:n
 
 
 export function interaction(array:person[][],x1:number,y1:number,x2:number,y2:number){
-    return array[x1][y1].infected && Math.random()<.7;
+    return array[x1][y1].infected && Math.random()<infectionPercent;
 }
 
 export function runInteractionsForASquare(array:person[][],x1:number,y1:number){
