@@ -42,13 +42,16 @@ export default function Home(){
   }, [run]);
   if (!ret) return (<div>Running tests...</div>);
   return (<div>
+    <Main auto = {false} info={ret}></Main>
     <Main auto={!manual} info={ret}></Main>
     <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={()=>{setRun(run +1 %2)}}>
       <h1>Re-Run</h1>
     </div>
+    {/*
     <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={()=>{setManual(!manual)}}>
       <h1>Mode: {manual ? "manual": "autotest"}</h1>
     </div>
+    */}
     <div>
       <h5>Immunity</h5>
       <input placeholder= {"" + configs[0]} onChange={(e)=>{setConfigVars(parseFloat(e.target.value),configs[1],configs[2],configs[3])}}></input>
@@ -65,7 +68,7 @@ export default function Home(){
     </div>
   </div>);
 }
-export function Main({auto, info}:{auto:boolean, info:{dataset: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[],iterations:string[]}}) {
+export function Main({auto, info}:{auto:boolean,info:{dataset: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[],iterations:string[]}}) {
   const [array,setArray] = useState(buildArray({x:0,y:0},11,13));
   let [iteration,setIteration] = useState(["0"]);
   const [data,setData] = useState([1]);
@@ -78,7 +81,7 @@ export function Main({auto, info}:{auto:boolean, info:{dataset: { label: string;
       iteration.push("" +(parseInt(iteration[iteration.length-1]) +1));
       setIteration(iteration);
     }
-  return (
+  const option1= (
     <div>
     <div style={{ display: "grid", gap: 8, padding: 16 }}>
       {array.map((row, rowIndex) => (
@@ -102,11 +105,16 @@ export function Main({auto, info}:{auto:boolean, info:{dataset: { label: string;
     <div style={{textAlign:"center",border:"2px solid white", borderRadius:"10px"}} onClick={run}>
       <h1>Next Frame</h1>
     </div>
-    <LineChart labels={auto? info!.iterations! :iteration} data1={data} mode2={auto? info.dataset : undefined}></LineChart>
+    <LineChart labels={auto? info!.iterations! :iteration} data1={data} mode2={auto? info.dataset : undefined} size={"50%"}></LineChart>
     </div>
   );
+  const option2 = (<div>
+    <h1 style={{textAlign:"center",marginTop:"50px"}}>AutoTest</h1>
+    <LineChart labels={auto? info!.iterations! :iteration} data1={data} mode2={auto? info.dataset : undefined} size={"50%"}></LineChart>
+    </div>)
+  return auto ? option2 : option1
 }
-const LineChart = ({labels, data1,mode2}:{labels: string[], data1?: number[],mode2?:{ label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[]}) => {
+const LineChart = ({labels, size,data1,mode2}:{labels: string[],size:string, data1?: number[],mode2?:{ label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number; }[]}) => {
   const data = {
     labels: labels,
     datasets: mode2? mode2 :[
@@ -137,7 +145,7 @@ const LineChart = ({labels, data1,mode2}:{labels: string[], data1?: number[],mod
     },
   };
   return (
-    <div style={{ width: '`00%', margin: '0 auto' }}>
+    <div style={{ width: `${size}`, margin: '0 auto' }}>
       <Line data={data} options={options} />
     </div>
   );
